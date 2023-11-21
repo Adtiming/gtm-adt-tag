@@ -1,5 +1,5 @@
 homepage: "https://www.adtiming.com"
 documentation: "https://github.com/Adtiming/gtm-adt-tag/blob/main/README.md"
 versions:
-  - sha: d4ccb3b790f4ef38c609d9e02851ef690ca28a28
+  - sha: cedd2c8df01d5ccc324ade57971ee4b9c9485371
     changeNotes: Initial release.
