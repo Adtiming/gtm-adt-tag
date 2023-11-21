@@ -424,7 +424,7 @@ scenarios:
     \  accountId: '1'\n};\n\nconst dataLayer = {\n      add: {\n         actionField:\
     \ {\n          list: 'Shopping cart'\n          },\n         products: [{ \n \
     \           name: 'item', \n            id: 'A123', \n            price:\
-    \ 999,\n            quantity: 5\n        },\n        { \n            name: '\
+    \ 999,\n            quantity: 5\n        },\n        { \n            name: '
     \ item2', \n            id: 'B123', \n            price: 999,\n            quantity:\
     \ 5\n        }]\n       } \n  };\nmock('copyFromDataLayer', (key) => {\n  return\
     \ dataLayer;\n});\n\nconst expected_params = {\n  notify: 'ecevent',\n  id: '1',\n\
