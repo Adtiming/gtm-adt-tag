@@ -423,8 +423,8 @@ scenarios:
   code: "const mockData = {\n  enhancedEcomm: true,\n  eventType_enhanced: 'ADD_TO_CART',\n\
     \  accountId: '1'\n};\n\nconst dataLayer = {\n      add: {\n         actionField:\
     \ {\n          list: 'Shopping cart'\n          },\n         products: [{ \n \
-    \           name: 'taboola item', \n            id: 'A123', \n            price:\
-    \ 999,\n            quantity: 5\n        },\n        { \n            name: 'taboola\
+    \           name: 'item', \n            id: 'A123', \n            price:\
+    \ 999,\n            quantity: 5\n        },\n        { \n            name: '\
     \ item2', \n            id: 'B123', \n            price: 999,\n            quantity:\
     \ 5\n        }]\n       } \n  };\nmock('copyFromDataLayer', (key) => {\n  return\
     \ dataLayer;\n});\n\nconst expected_params = {\n  notify: 'ecevent',\n  id: '1',\n\
@@ -433,10 +433,3 @@ scenarios:
     \ {\n    assertThat(item).isEqualTo(expected_params);\n  };\n});\n\n// Call runCode\
     \ to run the template's code.\nrunCode(mockData);\n\n// Verify that the tag finished\
     \ successfully.\nassertApi('injectScript').wasCalled();"
-
-
-___NOTES___
-
-Created on 1/28/2020, 4:40:32 PM
-
-
