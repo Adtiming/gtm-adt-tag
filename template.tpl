@@ -128,7 +128,8 @@ const encodeUriComponent = require("encodeUriComponent");
 const copyFromDataLayer = require("copyFromDataLayer");
 const getType = require("getType");
 const copyFromWindow = require("copyFromWindow");
-let _AdtRtTag = copyFromWindow("_AdtRtTag") || [];
+const createQueue = require('createQueue');
+const adtPush = createQueue('_AdtRtTag');
 
 const accountId = data.accountId;
 
@@ -255,8 +256,8 @@ if (data.enhancedEcomm) {
 
 
 
-if (params) {
-  _AdtRtTag.push(params);
+if (params.e) {
+  adtPush(params);
 }
 
 // Load the AdtRtTag script if not already loaded
