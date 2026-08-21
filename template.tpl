@@ -121,99 +121,99 @@ ___TEMPLATE_PARAMETERS___
 
 ___SANDBOXED_JS_FOR_WEB_TEMPLATE___
 
-// Require necessary APIs
 const log = require("logToConsole");
 const injectScript = require("injectScript");
 const encodeUriComponent = require("encodeUriComponent");
 const copyFromDataLayer = require("copyFromDataLayer");
 const getType = require("getType");
-const copyFromWindow = require("copyFromWindow");
-const createQueue = require('createQueue');
-const adtPush = createQueue('_AdtRtTag');
+const createQueue = require("createQueue");
 
+const adtPush = createQueue("_AdtRtTag");
 const accountId = data.accountId;
-
-// Build the payload for the _AdtRtTag call
 const params = {};
 
-const mapEnProducts = (products) => {
-  return products.map((i) => {
-    return {
-      pid: i.id,
-      q: i.quantity,
-      p: i.price,
-      a: 1,
-    };
-  });
-};
-
 const mapProducts = (products) => {
-  return products.map((i) => {
+  return products.map((item) => {
     return {
-      pid: i.id,
-      q: i.quantity,
-      p: i.price,
+      pid: item.id,
+      q: item.quantity,
+      p: item.price,
       a: 1,
     };
   });
 };
 
-log("event enhancedEcomm :" + data.enhancedEcomm);
+log("event enhancedEcomm: " + data.enhancedEcomm);
 
 if (data.enhancedEcomm) {
   const ecomm = copyFromDataLayer("ecommerce") || {};
-  log("enhancedevent:",data.eventType_enhanced);
+
+  log("enhanced event: " + data.eventType_enhanced);
+
+  // View product: event ID 4
   if (
     data.eventType_enhanced === "PRODUCT_VIEW" &&
     ecomm.hasOwnProperty("detail") &&
     getType(ecomm.detail.products) === "array"
   ) {
-    params.items = mapEnProducts(ecomm.add.products);
+    params.items = mapProducts(ecomm.detail.products);
     params.e = "4";
   }
+
+  // Add to cart: event ID 5
   if (
     data.eventType_enhanced === "ADD_TO_CART" &&
     ecomm.hasOwnProperty("add") &&
     getType(ecomm.add.products) === "array"
   ) {
-    params.items = mapEnProducts(ecomm.add.products);
+    params.items = mapProducts(ecomm.add.products);
     params.e = "5";
   }
+
+  // Purchase: event ID 8
   if (
     data.eventType_enhanced === "PURCHASE" &&
-    ecomm.hasOwnProperty("purchase")
+    ecomm.hasOwnProperty("purchase") &&
+    getType(ecomm.purchase.products) === "array"
   ) {
-    params.items = mapEnProducts(ecomm.purchase.products);
+    params.items = mapProducts(ecomm.purchase.products);
     params.tranId = ecomm.purchase.actionField.id;
     params.e = "8";
   }
+
+  // Remove from cart: event ID 10
   if (
     data.eventType_enhanced === "REMOVE_FROM_CART" &&
     ecomm.hasOwnProperty("remove") &&
     getType(ecomm.remove.products) === "array"
   ) {
-    params.items = mapEnProducts(ecomm.remove.products);
+    params.items = mapProducts(ecomm.remove.products);
     params.e = "10";
   }
+
+  // Checkout: event ID 10
   if (
     data.eventType_enhanced === "CHECKOUT" &&
     ecomm.hasOwnProperty("checkout")
   ) {
+    // Do not send the event when products are missing.
     if (!ecomm.checkout.products) {
-      return; // when the checkout step doesn't have products data
+      return;
     }
+
     params.items = mapProducts(ecomm.checkout.products);
     params.e = "10";
   }
-  log("enhancedevent params eid" + params.e);
-} else {
-  const event = copyFromDataLayer("event") || {};
-  log("enhancedevent:" + event);
 
+  log("enhanced event params eid: " + params.e);
+} else {
+  const event = copyFromDataLayer("event") || "";
   const eventModel = copyFromDataLayer("eventModel") || {};
 
-  log("eventModel:" + eventModel);
+  log("event: " + event);
+  log("eventModel: " + eventModel);
 
+  // GA4 ecommerce: view item
   if (
     data.eventType === "view_item" &&
     event === "view_item" &&
@@ -223,6 +223,7 @@ if (data.enhancedEcomm) {
     params.e = "4";
   }
 
+  // GA4 ecommerce: add to cart
   if (
     data.eventType === "add_to_cart" &&
     event === "add_to_cart" &&
@@ -232,6 +233,7 @@ if (data.enhancedEcomm) {
     params.e = "5";
   }
 
+  // GA4 ecommerce: view cart
   if (
     data.eventType === "view_cart" &&
     event === "view_cart" &&
@@ -241,6 +243,7 @@ if (data.enhancedEcomm) {
     params.e = "6";
   }
 
+  // GA4 ecommerce: purchase
   if (
     data.eventType === "purchase" &&
     event === "purchase" &&
@@ -251,16 +254,39 @@ if (data.enhancedEcomm) {
     params.e = "8";
   }
 
-  log("event params eid" + params.e);
+  // Custom user and financial events
+  const customEventIds = {
+    login: "13",
+    sign_up: "14",
+    kyc: "15",
+    deposit: "16",
+  };
+
+  if (customEventIds.hasOwnProperty(event)) {
+    params.e = customEventIds[event];
+
+    const cuid = copyFromDataLayer("cuid");
+    const method = copyFromDataLayer("method");
+
+    if (cuid) {
+      params.cuid = cuid;
+    }
+
+    // method is normally provided for login and sign_up events.
+    if (method) {
+      params.method = method;
+    }
+  }
+
+  log("event params eid: " + params.e);
 }
 
-
-
+// Push the event payload before loading the tracking script.
 if (params.e) {
   adtPush(params);
 }
 
-// Load the AdtRtTag script if not already loaded
+// Load the AdtRtTag script if it has not been loaded yet.
 injectScript(
   "https://rt.adtiming.com/js/ld.js?a=" + encodeUriComponent(accountId),
   data.gtmOnSuccess,
