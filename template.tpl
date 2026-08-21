@@ -69,6 +69,22 @@ ___TEMPLATE_PARAMETERS___
       {
         "value": "purchase",
         "displayValue": "Purchase"
+      },
+      {
+        "value": "login",
+        "displayValue": "Login"
+      },
+      {
+        "value": "sign_up",
+        "displayValue": "Sign Up"
+      },
+      {
+        "value": "kyc",
+        "displayValue": "KYC"
+      },
+      {
+        "value": "deposit",
+        "displayValue": "Deposit"
       }
     ],
     "simpleValueType": true,
@@ -196,7 +212,6 @@ if (data.enhancedEcomm) {
     data.eventType_enhanced === "CHECKOUT" &&
     ecomm.hasOwnProperty("checkout")
   ) {
-    // Do not send the event when products are missing.
     if (!ecomm.checkout.products) {
       return;
     }
@@ -254,16 +269,9 @@ if (data.enhancedEcomm) {
     params.e = "8";
   }
 
-  // Custom user and financial events
-  const customEventIds = {
-    login: "13",
-    sign_up: "14",
-    kyc: "15",
-    deposit: "16",
-  };
-
-  if (customEventIds.hasOwnProperty(event)) {
-    params.e = customEventIds[event];
+  // Login: event ID 13
+  if (data.eventType === "login" && event === "login") {
+    params.e = "13";
 
     const cuid = copyFromDataLayer("cuid");
     const method = copyFromDataLayer("method");
@@ -272,21 +280,56 @@ if (data.enhancedEcomm) {
       params.cuid = cuid;
     }
 
-    // method is normally provided for login and sign_up events.
     if (method) {
       params.method = method;
+    }
+  }
+
+  // Sign up: event ID 14
+  if (data.eventType === "sign_up" && event === "sign_up") {
+    params.e = "14";
+
+    const cuid = copyFromDataLayer("cuid");
+    const method = copyFromDataLayer("method");
+
+    if (cuid) {
+      params.cuid = cuid;
+    }
+
+    if (method) {
+      params.method = method;
+    }
+  }
+
+  // KYC: event ID 15
+  if (data.eventType === "kyc" && event === "kyc") {
+    params.e = "15";
+
+    const cuid = copyFromDataLayer("cuid");
+
+    if (cuid) {
+      params.cuid = cuid;
+    }
+  }
+
+  // Deposit: event ID 16
+  if (data.eventType === "deposit" && event === "deposit") {
+    params.e = "16";
+
+    const cuid = copyFromDataLayer("cuid");
+
+    if (cuid) {
+      params.cuid = cuid;
     }
   }
 
   log("event params eid: " + params.e);
 }
 
-// Push the event payload before loading the tracking script.
 if (params.e) {
   adtPush(params);
 }
 
-// Load the AdtRtTag script if it has not been loaded yet.
 injectScript(
   "https://rt.adtiming.com/js/ld.js?a=" + encodeUriComponent(accountId),
   data.gtmOnSuccess,
