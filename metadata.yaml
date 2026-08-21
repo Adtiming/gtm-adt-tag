@@ -1,6 +1,10 @@
 homepage: "https://www.adtiming.com"
 documentation: "https://github.com/Adtiming/gtm-adt-tag/blob/main/README.md"
 versions:
+  # Latest version
+  - sha: e8bed5fbe0ecbca86bda48a3731cc7ee828925f7
+    changeNotes: Add support for multiple events
+  # Older versions
   - sha: 86b002b2d6a1d83eeb2562499427e1b1b3d811cd
     changeNotes: Fix global _AdtRtTag queue handling.
   - sha: cedd2c8df01d5ccc324ade57971ee4b9c9485371
