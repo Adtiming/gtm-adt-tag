@@ -479,6 +479,14 @@ ___WEB_PERMISSIONS___
               {
                 "type": 1,
                 "string": "event.*"
+              },
+              {
+                "type": 1,
+                "string": "cuid"
+              },
+              {
+                "type": 1,
+                "string": "method"
               }
             ]
           }
