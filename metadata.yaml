@@ -2,9 +2,11 @@ homepage: "https://www.adtiming.com"
 documentation: "https://github.com/Adtiming/gtm-adt-tag/blob/main/README.md"
 versions:
   # Latest version
+  - sha: f098f1249e7a1283b9657ecdb56f4d6aa02fee50
+    changeNotes: Fix enhanced ecommerce event matching and data layer permissions
+  # Older versions
   - sha: a044b9a991c08a27ed249fc9c391445ea360cbb4
     changeNotes: Allow reading cuid and method from dataLayer
-  # Older versions
   - sha: f76a9bafe8b955e5d84004dd5663db00114be534
     changeNotes: Add login, sign up, kyc, and deposit event types
   - sha: e8bed5fbe0ecbca86bda48a3731cc7ee828925f7
