@@ -162,65 +162,86 @@ const mapProducts = (products) => {
 log("event enhancedEcomm: " + data.enhancedEcomm);
 
 if (data.enhancedEcomm) {
+  const event = copyFromDataLayer("event") || "";
   const ecomm = copyFromDataLayer("ecommerce") || {};
 
-  log("enhanced event: " + data.eventType_enhanced);
+  log("GA4 ecommerce event: " + event);
+  log("configured ecommerce event: " + data.eventType_enhanced);
 
-  // View product: event ID 4
+  const mapGa4Products = (items) => {
+    return items.map((item) => {
+      return {
+        pid: item.item_id,
+        q: item.quantity || 1,
+        p: item.price,
+        a: 1,
+      };
+    });
+  };
+
+  // GA4 view_item: event ID 4
   if (
-    data.eventType_enhanced === "PRODUCT_VIEW" &&
-    ecomm.hasOwnProperty("detail") &&
-    getType(ecomm.detail.products) === "array"
+    data.eventType_enhanced === "view_item" &&
+    event === "view_item" &&
+    getType(ecomm.items) === "array"
   ) {
-    params.items = mapProducts(ecomm.detail.products);
+    params.items = mapGa4Products(ecomm.items);
     params.e = "4";
   }
 
-  // Add to cart: event ID 5
+  // GA4 add_to_cart: event ID 5
   if (
-    data.eventType_enhanced === "ADD_TO_CART" &&
-    ecomm.hasOwnProperty("add") &&
-    getType(ecomm.add.products) === "array"
+    data.eventType_enhanced === "add_to_cart" &&
+    event === "add_to_cart" &&
+    getType(ecomm.items) === "array"
   ) {
-    params.items = mapProducts(ecomm.add.products);
+    params.items = mapGa4Products(ecomm.items);
     params.e = "5";
   }
 
-  // Purchase: event ID 8
+  // GA4 view_cart: event ID 6
   if (
-    data.eventType_enhanced === "PURCHASE" &&
-    ecomm.hasOwnProperty("purchase") &&
-    getType(ecomm.purchase.products) === "array"
+    data.eventType_enhanced === "view_cart" &&
+    event === "view_cart" &&
+    getType(ecomm.items) === "array"
   ) {
-    params.items = mapProducts(ecomm.purchase.products);
-    params.tranId = ecomm.purchase.actionField.id;
+    params.items = mapGa4Products(ecomm.items);
+    params.e = "6";
+  }
+
+  // GA4 begin_checkout: event ID 7
+  if (
+    data.eventType_enhanced === "begin_checkout" &&
+    event === "begin_checkout" &&
+    getType(ecomm.items) === "array"
+  ) {
+    params.items = mapGa4Products(ecomm.items);
+    params.e = "7";
+  }
+
+  // GA4 purchase: event ID 8
+  if (
+    data.eventType_enhanced === "purchase" &&
+    event === "purchase" &&
+    getType(ecomm.items) === "array"
+  ) {
+    params.items = mapGa4Products(ecomm.items);
+    params.tranId = ecomm.transaction_id;
+    params.tranValue = ecomm.value;
     params.e = "8";
   }
 
-  // Remove from cart: event ID 10
+  // GA4 remove_from_cart: event ID 17
   if (
-    data.eventType_enhanced === "REMOVE_FROM_CART" &&
-    ecomm.hasOwnProperty("remove") &&
-    getType(ecomm.remove.products) === "array"
+    data.eventType_enhanced === "remove_from_cart" &&
+    event === "remove_from_cart" &&
+    getType(ecomm.items) === "array"
   ) {
-    params.items = mapProducts(ecomm.remove.products);
-    params.e = "10";
+    params.items = mapGa4Products(ecomm.items);
+    params.e = "17";
   }
 
-  // Checkout: event ID 10
-  if (
-    data.eventType_enhanced === "CHECKOUT" &&
-    ecomm.hasOwnProperty("checkout")
-  ) {
-    if (!ecomm.checkout.products) {
-      return;
-    }
-
-    params.items = mapProducts(ecomm.checkout.products);
-    params.e = "10";
-  }
-
-  log("enhanced event params eid: " + params.e);
+  log("GA4 ecommerce event params eid: " + params.e);
 } else {
   const event = copyFromDataLayer("event") || "";
   const eventModel = copyFromDataLayer("eventModel") || {};
