@@ -44,9 +44,9 @@ ___TEMPLATE_PARAMETERS___
   {
     "type": "CHECKBOX",
     "name": "enhancedEcomm",
-    "checkboxText": "Use Enhanced Ecommerce",
+    "checkboxText": "Use GA4 Ecommerce Data Layer",
     "simpleValueType": true,
-    "help": "Select this option if you have a Google Enhance Ecommerce data layer installed on your site. When this option is selected, the required parameters will be collected from the data layer."
+    "help": "Select this option if your website pushes GA4 ecommerce events and parameters to the data layer. Ecommerce parameters will be read from the ecommerce object."
   },
   {
     "type": "SELECT",
@@ -103,24 +103,36 @@ ___TEMPLATE_PARAMETERS___
     "macrosInSelect": false,
     "selectItems": [
       {
-        "value": "ADD_TO_CART",
+        "value": "view_item",
+        "displayValue": "View Item"
+      },
+      {
+        "value": "add_to_cart",
         "displayValue": "Add To Cart"
       },
       {
-        "value": "PURCHASE",
+        "value": "view_cart",
+        "displayValue": "View Cart"
+      },
+      {
+        "value": "begin_checkout",
+        "displayValue": "Checkout"
+      },
+      {
+        "value": "purchase",
         "displayValue": "Purchase"
       },
       {
-        "value": "PRODUCT_VIEW",
-        "displayValue": "Product View"
-      },
-      {
-        "value": "REMOVE_FROM_CART",
+        "value": "remove_from_cart",
         "displayValue": "Remove From Cart"
       },
       {
-        "value": "CHECKOUT",
-        "displayValue": "Checkout"
+        "value": "login",
+        "displayValue": "Login"
+      },
+      {
+        "value": "sign_up",
+        "displayValue": "Sign Up"
       }
     ],
     "simpleValueType": true,
@@ -167,6 +179,7 @@ if (data.enhancedEcomm) {
 
   log("GA4 ecommerce event: " + event);
   log("configured ecommerce event: " + data.eventType_enhanced);
+  log("ecommerce items type: " + getType(ecomm.items));
 
   const mapGa4Products = (items) => {
     return items.map((item) => {
@@ -241,6 +254,38 @@ if (data.enhancedEcomm) {
     params.e = "17";
   }
 
+  // Login: event ID 13
+  if (data.eventType_enhanced === "login" && event === "login") {
+    params.e = "13";
+
+    const cuid = copyFromDataLayer("cuid");
+    const method = copyFromDataLayer("method");
+
+    if (cuid) {
+      params.cuid = cuid;
+    }
+
+    if (method) {
+      params.method = method;
+    }
+  }
+
+  // Sign up: event ID 14
+  if (data.eventType_enhanced === "sign_up" && event === "sign_up") {
+    params.e = "14";
+
+    const cuid = copyFromDataLayer("cuid");
+    const method = copyFromDataLayer("method");
+
+    if (cuid) {
+      params.cuid = cuid;
+    }
+
+    if (method) {
+      params.method = method;
+    }
+  }
+
   log("GA4 ecommerce event params eid: " + params.e);
 } else {
   const event = copyFromDataLayer("event") || "";
@@ -249,44 +294,45 @@ if (data.enhancedEcomm) {
   log("event: " + event);
   log("eventModel: " + eventModel);
 
-  // GA4 ecommerce: view item
+  // Custom ecommerce: view item
   if (
     data.eventType === "view_item" &&
     event === "view_item" &&
-    eventModel.hasOwnProperty("items")
+    getType(eventModel.items) === "array"
   ) {
     params.items = mapProducts(eventModel.items);
     params.e = "4";
   }
 
-  // GA4 ecommerce: add to cart
+  // Custom ecommerce: add to cart
   if (
     data.eventType === "add_to_cart" &&
     event === "add_to_cart" &&
-    eventModel.hasOwnProperty("items")
+    getType(eventModel.items) === "array"
   ) {
     params.items = mapProducts(eventModel.items);
     params.e = "5";
   }
 
-  // GA4 ecommerce: view cart
+  // Custom ecommerce: view cart
   if (
     data.eventType === "view_cart" &&
     event === "view_cart" &&
-    eventModel.hasOwnProperty("items")
+    getType(eventModel.items) === "array"
   ) {
     params.items = mapProducts(eventModel.items);
     params.e = "6";
   }
 
-  // GA4 ecommerce: purchase
+  // Custom ecommerce: purchase
   if (
     data.eventType === "purchase" &&
     event === "purchase" &&
-    eventModel.hasOwnProperty("items")
+    getType(eventModel.items) === "array"
   ) {
     params.items = mapProducts(eventModel.items);
     params.tranId = eventModel.transaction_id;
+    params.tranValue = eventModel.value;
     params.e = "8";
   }
 
@@ -491,11 +537,23 @@ ___WEB_PERMISSIONS___
             "listItem": [
               {
                 "type": 1,
+                "string": "ecommerce"
+              },
+              {
+                "type": 1,
                 "string": "ecommerce.*"
               },
               {
                 "type": 1,
+                "string": "eventModel"
+              },
+              {
+                "type": 1,
                 "string": "eventModel.*"
+              },
+              {
+                "type": 1,
+                "string": "event"
               },
               {
                 "type": 1,
@@ -526,18 +584,46 @@ ___TESTS___
 
 scenarios:
 - name: enhanced add to cart
-  code: "const mockData = {\n  enhancedEcomm: true,\n  eventType_enhanced: 'ADD_TO_CART',\n\
-    \  accountId: '1'\n};\n\nconst dataLayer = {\n      add: {\n         actionField:\
-    \ {\n          list: 'Shopping cart'\n          },\n         products: [{ \n \
-    \           name: 'item', \n            id: 'A123', \n            price: 999,\n\
-    \            quantity: 5\n        },\n        { \n            name: 'item2', \n\
-    \            id: 'B123', \n            price: 999,\n            quantity: 5\n\
-    \        }]\n       } \n  };\nmock('copyFromDataLayer', (key) => {\n  return dataLayer;\n\
-    });\n\nconst expected_params = {\n  notify: 'ecevent',\n  id: '1',\n  name: 'ADD_TO_CART',\n\
-    \  productIds: ['A123', 'B123']\n};\nmock('createQueue', (name) => {\n  assertThat(name).isEqualTo('_AdtRtTag');\n\
-    \  return function(item) {\n    assertThat(item).isEqualTo(expected_params);\n\
-    \  };\n});\n\n// Call runCode to run the template's code.\nrunCode(mockData);\n\
-    \n// Verify that the tag finished successfully.\nassertApi('injectScript').wasCalled();"
+  code: |-
+    const mockData = {
+      enhancedEcomm: true,
+      eventType_enhanced: 'add_to_cart',
+      accountId: '1'
+    };
+
+    const dataLayer = {
+      event: 'add_to_cart',
+      ecommerce: {
+        items: [
+          { item_id: 'A123', price: 999, quantity: 2 },
+          { item_id: 'B123', price: 199, quantity: 1 }
+        ]
+      }
+    };
+    mock('copyFromDataLayer', (key) => {
+      return dataLayer[key];
+    });
+
+    const expected_params = {
+      items: [
+        { pid: 'A123', q: 2, p: 999, a: 1 },
+        { pid: 'B123', q: 1, p: 199, a: 1 }
+      ],
+      e: '5'
+    };
+    mock('createQueue', (name) => {
+      assertThat(name).isEqualTo('_AdtRtTag');
+      return function(item) {
+        assertThat(item).isEqualTo(expected_params);
+      };
+    });
+
+    // Call runCode to run the template's code.
+    runCode(mockData);
+
+    // Verify that the tag finished successfully.
+    assertApi('injectScript').wasCalled();
+
 
 
 ___NOTES___
